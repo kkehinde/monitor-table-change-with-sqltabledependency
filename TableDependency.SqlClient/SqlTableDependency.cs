@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 // TableDependency, SqlTableDependency
 // Copyright (c) 2015-2020 Christian Del Bianco. All rights reserved.
 //
@@ -540,6 +540,16 @@ namespace TableDependency.SqlClient
                     var sendInsertConversationStatements = this.PrepareSendConversation(ChangeType.Insert, interestedColumns);
                     var sendUpdatedConversationStatements = this.PrepareSendConversation(ChangeType.Update, interestedColumns);
                     var sendDeletedConversationStatements = this.PrepareSendConversation(ChangeType.Delete, interestedColumns);
+
+                    sqlCommand.CommandText = string.Format(
+                        SqlScripts.DropTriggers,
+                        $"{ _schemaName}",
+                        $"{ _tableName}");
+
+                    this.WriteTraceMessage(TraceLevel.Verbose, $"{sqlCommand.CommandText}");
+
+                    sqlCommand.ExecuteNonQuery();
+                    this.WriteTraceMessage(TraceLevel.Verbose, $"Triggers have been deleted.");
 
                     sqlCommand.CommandText = string.Format(
                         SqlScripts.CreateTrigger,
