@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 // TableDependency, SqlTableDependency
 // Copyright (c) 2015-2020 Christian Del Bianco. All rights reserved.
 //
@@ -52,6 +52,20 @@ BEGIN
         PRINT N'SqlTableDependency: Drop objects {0} ended.';
     END
 END";
+        public const string DropTriggers = @"DECLARE @triggerToDelete varchar(256)
+            DECLARE triggerDeletionCursor CURSOR FOR SELECT name FROM sys.triggers WHERE name like 'tr_{0}_{1}_%_Sender'
+
+            OPEN triggerDeletionCursor
+            FETCH triggerDeletionCursor INTO @triggerToDelete
+            WHILE @@FETCH_STATUS = 0  
+            BEGIN
+                  DECLARE @cmd nvarchar(1024)
+                  SET @cmd='DROP TRIGGER ['+@triggerToDelete+']'
+                  exec sp_executesql @cmd
+                  FETCH triggerDeletionCursor INTO @triggerToDelete
+            END
+            CLOSE triggerDeletionCursor
+            DEALLOCATE triggerDeletionCursor";
 
         public const string CreateTrigger = @"CREATE TRIGGER [tr_{0}_Sender] ON {1} AFTER {13} AS 
 BEGIN
@@ -72,7 +86,7 @@ BEGIN
     SELECT @conversationHandlerExists = COUNT(*) FROM sys.conversation_endpoints WHERE conversation_handle = '{19}';
     IF @conversationHandlerExists = 0
     BEGIN
-        DROP TRIGGER [tr_{0}_Sender];
+        --DROP TRIGGER [tr_{0}_Sender];
         RETURN
     END
     
